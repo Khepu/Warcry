@@ -3,8 +3,6 @@
 open System.Speech.Recognition
 
 module Warcry =
-    let set = Set.ofList
-
     type Order =
         | Word of string
         | Sequence of Order list
