@@ -8,25 +8,24 @@ module Warcry =
     type Order =
         | Word of string
         | Sequence of Order list
-        | Choice of Order Set
-        | Dictation
+        | Choice of Order list
 
     let position =
-        Choice (set [
+        Choice [
             Sequence [
                 Word "move"
-                Choice (set [
+                Choice [
                     Word "here"
-                ])
+                ]
             ]
             Word "follow me"
             Word "charge"
             Word "advance"
             Word "fall back"
-            Choice (set [
+            Choice [
                 Word "halt"
                 Word "stop"
-            ])
+            ]
             Word "retreat"
             Word "cancel that"
         ])
@@ -34,16 +33,16 @@ module Warcry =
     let direction =
         Sequence [
             Word "face"
-            Choice (set [
+            Choice [
                 Word "the enemy"
                 Word "this way"
-            ])
+            ]
         ]
     
     let formation =
         Sequence [
             Word "take"
-            Choice (set [
+            Choice [
                 Word "line"
                 Word "shield wall"
                 Word "loose"
@@ -52,31 +51,39 @@ module Warcry =
                 Word "skein"
                 Word "column"
                 Word "scatter"
-            ])
+            ]
             Word "formation"
         ]
     
     let unit =
-        Choice (set [
+        Choice [
             Word "soldiers"
             Word "archers"
             Word "cavalry"
             Word "horse archers"
-        ])
+        ]
     
     let orders =
         Sequence [
             unit
-            Choice (set [
+            Choice [
                 position
                 direction
                 formation
                 Word "fire at will"
-                Choice (set [
+                Choice [
                     Word "hold your fire"
                     Word "cease fire"
-                ])
+                ]
                 Word "dismount"
                 Word "get on your horses"
-            ])
+            ]
         ]
+    
+    let rec grammar = function
+        | Word word -> GrammarBuilder(word)
+        | Sequence orders ->
+            let builder = GrammarBuilder()
+            List.iter (fun order -> builder.Append(grammar order)) orders
+            builder
+        | Choice choices -> GrammarBuilder(Choices(List.map grammar choices |> Array.ofList))
